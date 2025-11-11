@@ -19,6 +19,7 @@ namespace CassinoMVC.Views
             btnRegistros.Click += BtnRegistros_Click;
             btnRoleta.Click += BtnRoleta_Click;
             btnBlackJack.Click += BtnBlackJack_Click;
+            btnUsuarios.Click += BtnUsuarios_Click;
         }
 
         public void CarregarContexto(CassinoMVC.Models.Usuario usuario, CassinoMVC.Models.Jogador jogador)
@@ -112,5 +113,15 @@ namespace CassinoMVC.Views
                 frm.ShowDialog(this);
             }
         }
+        private void BtnUsuarios_Click(object sender, EventArgs e)
+        {
+            if (_usuarioLogado == null || _usuarioLogado.Cargo != CassinoMVC.Models.CargoUsuario.Administrador) return;
+            using (var frm = new Usuarios())
+            {
+                frm.DefinirUsuarioLogado(_usuarioLogado);
+                frm.ShowDialog(this);
+            }
+        }
+
     }
 }

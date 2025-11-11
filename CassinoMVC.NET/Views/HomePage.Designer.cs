@@ -1,5 +1,6 @@
 ﻿using System.Windows.Forms;
 using System.Drawing;
+using System;
 
 namespace CassinoMVC.Views
 {
@@ -31,126 +32,128 @@ namespace CassinoMVC.Views
         /// </summary>
         private void InitializeComponent()
         {
-            btnRoleta = new Button();
-            btnBlackJack = new Button();
-            btnSlots = new Button();
-            lblPerfil = new Label();
-            txtFichas = new TextBox();
-            button1 = new Button();
-            btnRegistros = new Button();
-            btnUsuarios = new Button();
-            txtUsuário = new TextBox();
-            btnEditarUsuario = new Button();
-            SuspendLayout();
+            this.btnRoleta = new System.Windows.Forms.Button();
+            this.btnBlackJack = new System.Windows.Forms.Button();
+            this.btnSlots = new System.Windows.Forms.Button();
+            this.lblPerfil = new System.Windows.Forms.Label();
+            this.txtFichas = new System.Windows.Forms.TextBox();
+            this.button1 = new System.Windows.Forms.Button();
+            this.btnRegistros = new System.Windows.Forms.Button();
+            this.btnUsuarios = new System.Windows.Forms.Button();
+            this.txtUsuário = new System.Windows.Forms.TextBox();
+            this.btnEditarUsuario = new System.Windows.Forms.Button();
+            this.SuspendLayout();
             // 
             // btnRoleta
             // 
-            btnRoleta.Location = new Point(12, 211);
-            btnRoleta.Name = "btnRoleta";
-            btnRoleta.Size = new Size(119, 23);
-            btnRoleta.TabIndex = 0;
-            btnRoleta.Text = "Roleta";
-            btnRoleta.UseVisualStyleBackColor = true;
+            this.btnRoleta.Location = new System.Drawing.Point(10, 183);
+            this.btnRoleta.Name = "btnRoleta";
+            this.btnRoleta.Size = new System.Drawing.Size(102, 20);
+            this.btnRoleta.TabIndex = 0;
+            this.btnRoleta.Text = "Roleta";
+            this.btnRoleta.UseVisualStyleBackColor = true;
             // 
             // btnBlackJack
             // 
-            btnBlackJack.Location = new Point(12, 182);
-            btnBlackJack.Name = "btnBlackJack";
-            btnBlackJack.Size = new Size(119, 23);
-            btnBlackJack.TabIndex = 1;
-            btnBlackJack.Text = "BlackJack";
-            btnBlackJack.UseVisualStyleBackColor = true;
+            this.btnBlackJack.Location = new System.Drawing.Point(10, 158);
+            this.btnBlackJack.Name = "btnBlackJack";
+            this.btnBlackJack.Size = new System.Drawing.Size(102, 20);
+            this.btnBlackJack.TabIndex = 1;
+            this.btnBlackJack.Text = "BlackJack";
+            this.btnBlackJack.UseVisualStyleBackColor = true;
             // 
             // btnSlots
             // 
-            btnSlots.Location = new Point(12, 240);
-            btnSlots.Name = "btnSlots";
-            btnSlots.Size = new Size(119, 23);
-            btnSlots.TabIndex = 2;
-            btnSlots.Text = "Slots";
-            btnSlots.UseVisualStyleBackColor = true;
+            this.btnSlots.Location = new System.Drawing.Point(10, 208);
+            this.btnSlots.Name = "btnSlots";
+            this.btnSlots.Size = new System.Drawing.Size(102, 20);
+            this.btnSlots.TabIndex = 2;
+            this.btnSlots.Text = "Slots";
+            this.btnSlots.UseVisualStyleBackColor = true;
             // 
             // lblPerfil
             // 
-            lblPerfil.AutoSize = true;
-            lblPerfil.Location = new Point(12, 9);
-            lblPerfil.Name = "lblPerfil";
-            lblPerfil.Size = new Size(47, 15);
-            lblPerfil.TabIndex = 3;
-            lblPerfil.Text = "Usuário";
+            this.lblPerfil.AutoSize = true;
+            this.lblPerfil.Location = new System.Drawing.Point(10, 8);
+            this.lblPerfil.Name = "lblPerfil";
+            this.lblPerfil.Size = new System.Drawing.Size(43, 13);
+            this.lblPerfil.TabIndex = 3;
+            this.lblPerfil.Text = "Usuário";
             // 
             // txtFichas
             // 
-            txtFichas.Location = new Point(12, 56);
-            txtFichas.Name = "txtFichas";
-            txtFichas.ReadOnly = true;
-            txtFichas.Size = new Size(100, 23);
-            txtFichas.TabIndex = 4;
+            this.txtFichas.Location = new System.Drawing.Point(10, 49);
+            this.txtFichas.Name = "txtFichas";
+            this.txtFichas.ReadOnly = true;
+            this.txtFichas.Size = new System.Drawing.Size(86, 20);
+            this.txtFichas.TabIndex = 4;
             // 
             // button1
             // 
-            button1.Location = new Point(118, 55);
-            button1.Name = "button1";
-            button1.Size = new Size(120, 23);
-            button1.TabIndex = 5;
-            button1.Text = "Comprar Fichas";
-            button1.UseVisualStyleBackColor = true;
+            this.button1.Location = new System.Drawing.Point(101, 48);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(103, 20);
+            this.button1.TabIndex = 5;
+            this.button1.Text = "Comprar Fichas";
+            this.button1.UseVisualStyleBackColor = true;
             // 
             // btnRegistros
             // 
-            btnRegistros.Location = new Point(326, 211);
-            btnRegistros.Name = "btnRegistros";
-            btnRegistros.Size = new Size(75, 23);
-            btnRegistros.TabIndex = 6;
-            btnRegistros.Text = "Registros";
-            btnRegistros.UseVisualStyleBackColor = true;
+            this.btnRegistros.Location = new System.Drawing.Point(279, 183);
+            this.btnRegistros.Name = "btnRegistros";
+            this.btnRegistros.Size = new System.Drawing.Size(64, 20);
+            this.btnRegistros.TabIndex = 6;
+            this.btnRegistros.Text = "Registros";
+            this.btnRegistros.UseVisualStyleBackColor = true;
             // 
             // btnUsuarios
             // 
-            btnUsuarios.Location = new Point(326, 240);
-            btnUsuarios.Name = "btnUsuarios";
-            btnUsuarios.Size = new Size(75, 23);
-            btnUsuarios.TabIndex = 7;
-            btnUsuarios.Text = "Usuários";
-            btnUsuarios.UseVisualStyleBackColor = true;
+            this.btnUsuarios.Location = new System.Drawing.Point(279, 208);
+            this.btnUsuarios.Name = "btnUsuarios";
+            this.btnUsuarios.Size = new System.Drawing.Size(64, 20);
+            this.btnUsuarios.TabIndex = 7;
+            this.btnUsuarios.Text = "Usuários";
+            this.btnUsuarios.UseVisualStyleBackColor = true;
             // 
             // txtUsuário
             // 
-            txtUsuário.Location = new Point(12, 27);
-            txtUsuário.Name = "txtUsuário";
-            txtUsuário.ReadOnly = true;
-            txtUsuário.Size = new Size(100, 23);
-            txtUsuário.TabIndex = 8;
+            this.txtUsuário.Location = new System.Drawing.Point(10, 23);
+            this.txtUsuário.Name = "txtUsuário";
+            this.txtUsuário.ReadOnly = true;
+            this.txtUsuário.Size = new System.Drawing.Size(86, 20);
+            this.txtUsuário.TabIndex = 8;
             // 
             // btnEditarUsuario
             // 
-            btnEditarUsuario.Location = new Point(118, 27);
-            btnEditarUsuario.Name = "btnEditarUsuario";
-            btnEditarUsuario.Size = new Size(120, 23);
-            btnEditarUsuario.TabIndex = 9;
-            btnEditarUsuario.Text = "Editar Usuário";
-            btnEditarUsuario.UseVisualStyleBackColor = true;
+            this.btnEditarUsuario.Location = new System.Drawing.Point(101, 23);
+            this.btnEditarUsuario.Name = "btnEditarUsuario";
+            this.btnEditarUsuario.Size = new System.Drawing.Size(103, 20);
+            this.btnEditarUsuario.TabIndex = 9;
+            this.btnEditarUsuario.Text = "Editar Usuário";
+            this.btnEditarUsuario.UseVisualStyleBackColor = true;
             // 
             // HomePage
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
-            AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(413, 282);
-            Controls.Add(btnEditarUsuario);
-            Controls.Add(txtUsuário);
-            Controls.Add(btnUsuarios);
-            Controls.Add(btnRegistros);
-            Controls.Add(button1);
-            Controls.Add(txtFichas);
-            Controls.Add(lblPerfil);
-            Controls.Add(btnSlots);
-            Controls.Add(btnBlackJack);
-            Controls.Add(btnRoleta);
-            Name = "HomePage";
-            Text = "HomePage";
-            ResumeLayout(false);
-            PerformLayout();
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(354, 244);
+            this.Controls.Add(this.btnEditarUsuario);
+            this.Controls.Add(this.txtUsuário);
+            this.Controls.Add(this.btnUsuarios);
+            this.Controls.Add(this.btnRegistros);
+            this.Controls.Add(this.button1);
+            this.Controls.Add(this.txtFichas);
+            this.Controls.Add(this.lblPerfil);
+            this.Controls.Add(this.btnSlots);
+            this.Controls.Add(this.btnBlackJack);
+            this.Controls.Add(this.btnRoleta);
+            this.Name = "HomePage";
+            this.Text = "HomePage";
+            this.ResumeLayout(false);
+            this.PerformLayout();
+
         }
+
 
         #endregion
 
