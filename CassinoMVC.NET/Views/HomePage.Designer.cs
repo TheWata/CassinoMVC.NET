@@ -149,6 +149,7 @@ namespace CassinoMVC.Views
             this.Controls.Add(this.btnRoleta);
             this.Name = "HomePage";
             this.Text = "HomePage";
+            this.Load += new System.EventHandler(this.HomePage_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 

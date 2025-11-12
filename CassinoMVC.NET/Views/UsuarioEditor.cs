@@ -1,5 +1,5 @@
 using System;
-using System.Linq;
+using System.ComponentModel;
 using System.Windows.Forms;
 using CassinoMVC.Controllers;
 
@@ -20,17 +20,38 @@ namespace CassinoMVC.Views
         private Button btnSalvar;
         private Button btnCancelar;
 
+        // Construtor sem parâmetros para o Designer
+        public UsuarioEditor()
+        {
+            InitializeComponent();
+            if (!IsDesignMode())
+            {
+                // Padrão criação: Jogador, saldo 0
+                cbCargo.SelectedItem = CassinoMVC.Models.CargoUsuario.Jogador;
+                if (numSaldoInicial != null) numSaldoInicial.Value = 0;
+                AtualizarVisibilidadeSaldo();
+            }
+        }
+
         public UsuarioEditor(CassinoMVC.Models.Usuario usuarioLogado, int? idUsuarioEdicao = null)
         {
             _usuarioLogado = usuarioLogado;
             _idUsuarioEdicao = idUsuarioEdicao;
             InitializeComponent();
-            Carregar();
+            if (!IsDesignMode())
+            {
+                Carregar();
+            }
+        }
+
+        private static bool IsDesignMode()
+        {
+            return LicenseManager.UsageMode == LicenseUsageMode.Designtime;
         }
 
         private void InitializeComponent()
         {
-            Text = _idUsuarioEdicao.HasValue ? "Editar Usuário" : "Adicionar Usuário";
+            Text = (_idUsuarioEdicao.HasValue ? "Editar Usuário" : "Adicionar Usuário");
             Width = 420;
             Height = 320;
             FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -75,10 +96,15 @@ namespace CassinoMVC.Views
 
         private void AtualizarVisibilidadeSaldo()
         {
-            var cargo = (CassinoMVC.Models.CargoUsuario)cbCargo.SelectedItem;
-            bool ehJogador = cargo == CassinoMVC.Models.CargoUsuario.Jogador;
-            lblSaldoInicial.Visible = ehJogador && !_idUsuarioEdicao.HasValue; // saldo só na criação
-            numSaldoInicial.Visible = ehJogador && !_idUsuarioEdicao.HasValue;
+            // Evita NRE se nada selecionado no ComboBox
+            bool ehJogador = false;
+            if (cbCargo != null && cbCargo.SelectedItem is CassinoMVC.Models.CargoUsuario cargoSel)
+            {
+                ehJogador = cargoSel == CassinoMVC.Models.CargoUsuario.Jogador;
+            }
+            bool mostrar = ehJogador && !_idUsuarioEdicao.HasValue;
+            if (lblSaldoInicial != null) lblSaldoInicial.Visible = mostrar;
+            if (numSaldoInicial != null) numSaldoInicial.Visible = mostrar;
         }
 
         private void Carregar()
@@ -106,10 +132,20 @@ namespace CassinoMVC.Views
 
         private void BtnSalvar_Click(object sender, EventArgs e)
         {
+            if (_usuarioLogado == null)
+            {
+                MessageBox.Show("Usuário logado não identificado.");
+                return;
+            }
+
             var nome = txtNomeCompleto.Text.Trim();
             var login = txtNomeUsuario.Text.Trim();
-            var senha = txtSenha.Text; // vazia em edição = manter
-            var cargo = (CassinoMVC.Models.CargoUsuario)cbCargo.SelectedItem;
+            var senha = txtSenha.Text;
+            if (!(cbCargo.SelectedItem is CassinoMVC.Models.CargoUsuario cargo))
+            {
+                MessageBox.Show("Selecione um cargo.");
+                return;
+            }
 
             if (_idUsuarioEdicao.HasValue)
             {
@@ -126,7 +162,7 @@ namespace CassinoMVC.Views
             }
             else
             {
-                if (!_usuarioLogado.Cargo.Equals(CassinoMVC.Models.CargoUsuario.Administrador))
+                if (_usuarioLogado.Cargo != CassinoMVC.Models.CargoUsuario.Administrador)
                 {
                     MessageBox.Show("Apenas administradores podem criar usuários.");
                     return;

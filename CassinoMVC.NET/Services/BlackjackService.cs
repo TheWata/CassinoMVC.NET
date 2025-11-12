@@ -21,14 +21,14 @@ namespace CassinoMVC.Services
             var d2 = jogo.Baralho.ComprarCarta(); if (d2 != null) jogo.MaoDealer.Add(d2);
             return jogo;
         }
-
+        /// Jogador escolhe comprar mais uma carta.
         public static void Hit(BlackjackGame jogo)
         {
             if (jogo.Estado == BlackjackEstado.Finalizada) return;
             var c = jogo.Baralho.ComprarCarta(); if (c != null) jogo.MaoJogador.Add(c);
             if (Pontos(jogo.MaoJogador) >21) jogo.Estado = BlackjackEstado.Finalizada;
         }
-
+        /// Jogador escolhe dobrar a aposta e receber apenas mais uma carta.
         public static void DoubleDown(BlackjackGame jogo)
         {
             if (jogo.Estado == BlackjackEstado.Finalizada || jogo.DoubleDownUsado) return;
@@ -38,14 +38,14 @@ namespace CassinoMVC.Services
             DealerPlay(jogo);
             jogo.Estado = BlackjackEstado.Finalizada;
         }
-
+        /// Jogador escolhe ficar com as cartas que tem.
         public static void Stay(BlackjackGame jogo)
         {
             if (jogo.Estado == BlackjackEstado.Finalizada) return;
             DealerPlay(jogo);
             jogo.Estado = BlackjackEstado.Finalizada;
         }
-
+        /// Lógica do dealer: parar com minimo de 17.
         private static void DealerPlay(BlackjackGame jogo)
         {
             while (Pontos(jogo.MaoDealer) <17)

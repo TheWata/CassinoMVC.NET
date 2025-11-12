@@ -17,7 +17,7 @@ namespace CassinoMVC.Models
         public IReadOnlyList<Usuario> Itens => _itens;
         public int Count => _itens.Count;
 
-        // Linhas já formatadas para UI (opcional)
+        // Lista pré formatada de usuários para exibição em views
         public IEnumerable<string> ToDisplayLines()
         {
             foreach (var u in _itens)

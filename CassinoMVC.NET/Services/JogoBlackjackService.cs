@@ -19,7 +19,7 @@ namespace CassinoMVC.Services
         }
 
         /// <summary>
-        /// Calcula a pontuação de uma mão tratando ases como 11 inicialmente e ajustando para 1 se estourar (>21).
+        /// Calcula a pontuação de uma mão com tratamento de ases como 11 inicialmente e ajustando para 1 se estourar (>21).
         /// </summary>
         public static int PontosDaMao(IEnumerable<Carta> mao)
         {
@@ -30,7 +30,7 @@ namespace CassinoMVC.Services
                 pontos += c.Pontuacao;
                 if (c.Valor == "A") ases++;
             }
-            // Ajuste dinâmico dos ases de 11 para 1 conforme necessidade.
+            // tratamento dos Áses
             while (pontos > 21 && ases > 0)
             {
                 pontos -= 10;

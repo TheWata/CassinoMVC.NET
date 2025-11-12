@@ -123,5 +123,9 @@ namespace CassinoMVC.Views
             }
         }
 
+        private void HomePage_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }

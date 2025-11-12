@@ -183,44 +183,6 @@ namespace CassinoMVC.Controllers
             return true;
         }
 
-        public void EditarSelecionado(IWin32Window owner, ListBox listBox, Usuario usuarioLogado)
-        {
-            if (usuarioLogado == null)
-            {
-                MessageBox.Show("Usuário logado não identificado.");
-                return;
-            }
-            int id = ObterIdSelecionado(listBox);
-            if (id <= 0)
-            {
-                MessageBox.Show("Selecione um usuário.");
-                return;
-            }
-            using (var frm = new Views.UsuarioEditor(usuarioLogado, id))
-            {
-                if (frm.ShowDialog(owner) == DialogResult.OK)
-                {
-                    CarregarLista(listBox);
-                }
-            }
-        }
-
-        public void Adicionar(IWin32Window owner, ListBox listBox, Usuario usuarioLogado)
-        {
-            if (usuarioLogado == null)
-            {
-                MessageBox.Show("Usuário logado não identificado.");
-                return;
-            }
-            using (var frm = new Views.UsuarioEditor(usuarioLogado))
-            {
-                if (frm.ShowDialog(owner) == DialogResult.OK)
-                {
-                    CarregarLista(listBox);
-                }
-            }
-        }
-
         public void RemoverSelecionado(IWin32Window owner, ListBox listBox, Usuario usuarioLogado)
         {
             if (usuarioLogado == null)

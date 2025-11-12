@@ -1,6 +1,6 @@
 using System;
+using System.ComponentModel;
 using System.Windows.Forms;
-using CassinoMVC.Models;
 using CassinoMVC.Controllers;
 
 namespace CassinoMVC.Views
@@ -16,11 +16,26 @@ namespace CassinoMVC.Views
         private readonly UsuariosController _controller = new UsuariosController();
         private int _idUsuario;
 
+        // Construtor sem parâmetros para o Designer
+        public UsuarioDetalhes()
+        {
+            _idUsuario = 0;
+            InitializeComponent();
+            if (!IsDesignMode() && _idUsuario > 0)
+                Carregar();
+        }
+
         public UsuarioDetalhes(int idUsuario)
         {
             _idUsuario = idUsuario;
             InitializeComponent();
-            Carregar();
+            if (!IsDesignMode())
+                Carregar();
+        }
+
+        private static bool IsDesignMode()
+        {
+            return LicenseManager.UsageMode == LicenseUsageMode.Designtime;
         }
 
         private void InitializeComponent()
