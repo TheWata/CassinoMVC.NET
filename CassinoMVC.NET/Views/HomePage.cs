@@ -31,7 +31,7 @@ namespace CassinoMVC.Views
             bool ehAdmin = usuario.Cargo == CassinoMVC.Models.CargoUsuario.Administrador;
             btnRegistros.Visible = ehAdmin;
             btnUsuarios.Visible = ehAdmin;
-            btnEditarUsuario.Visible = ehAdmin;
+            //btnEditarUsuario.Visible = ehAdmin;
         }
 
         private void AbrirSlots()

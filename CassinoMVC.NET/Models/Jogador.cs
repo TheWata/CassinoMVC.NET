@@ -1,9 +1,12 @@
 using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CassinoMVC.Models
 {
     public class Jogador
     {
+        [Key]
         public int IdJogador { get; set; }
         public int? IdUsuario { get; set; }
         public string Apelido { get; set; } = string.Empty;
@@ -12,6 +15,7 @@ namespace CassinoMVC.Models
         public DateTime DataCriacao { get; set; } = DateTime.UtcNow;
 
         // Navegação
-        public Usuario Usuario { get; set; }
+        [ForeignKey("IdUsuario")]
+        public virtual Usuario Usuario { get; set; } // <-- ADICIONAR "virtual"
     }
 }

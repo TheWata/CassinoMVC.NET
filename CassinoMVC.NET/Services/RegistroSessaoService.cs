@@ -1,25 +1,28 @@
 using System.Collections.Generic;
 using System.Linq;
 using CassinoMVC.Models;
+using CassinoMVC.Data; // <-- ADICIONADO
 
 namespace CassinoMVC.Services
 {
     /// <summary>
-    /// Serviço simples em memória para gerenciar início/fim de sessões de jogo e compras.
+    /// Serviço para gerenciar início/fim de sessões de jogo e compras.
+    /// AGORA USANDO O BANCO DE DADOS (EF).
     /// </summary>
     public static class RegistroSessaoService
     {
-        private static readonly List<RegistroModel> _registros = new List<RegistroModel>();
-        private static int _nextId = 1;
+        // REMOVIDO o banco de dados em memória
+        // private static readonly List<RegistroModel> _registros = new List<RegistroModel>();
+        // private static int _nextId = 1;
 
         /// <summary>
-        /// Inicia sessão e retorna id.
+        /// Inicia sessão e retorna id. (Salva no banco)
         /// </summary>
         public static int IniciarSessao(string jogoOuAcao, string usuario, decimal saldoInicial)
         {
             var reg = new RegistroModel
             {
-                Id = _nextId++,
+                // Id = _nextId++, // <-- REMOVIDO (será definido pelo SQL Server)
                 Usuario = usuario,
                 JogoOuAcao = jogoOuAcao,
                 SaldoInicial = saldoInicial,
@@ -27,38 +30,63 @@ namespace CassinoMVC.Services
                 Inicio = System.DateTime.UtcNow,
                 Fim = System.DateTime.UtcNow
             };
-            _registros.Add(reg);
-            return reg.Id;
+
+            // Lógica NOVA:
+            using (var ctx = new DataContext())
+            {
+                ctx.Registros.Add(reg);
+                ctx.SaveChanges(); // Salva no banco
+            }
+
+            return reg.Id; // Retorna o ID gerado pelo banco
         }
 
         /// <summary>
-        /// Finaliza sessão (atualiza saldo final e tempo).
+        /// Finaliza sessão (atualiza saldo final e tempo no banco).
         /// </summary>
         public static void FinalizarSessao(int id, decimal saldoFinal)
         {
-            var reg = _registros.FirstOrDefault(r => r.Id == id);
-            if (reg == null) return;
-            reg.SaldoFinal = saldoFinal;
-            reg.Fim = System.DateTime.UtcNow;
+            // Lógica ANTIGA:
+            // var reg = _registros.FirstOrDefault(r => r.Id == id);
+
+            // Lógica NOVA:
+            using (var ctx = new DataContext())
+            {
+                var reg = ctx.Registros.Find(id); // Busca pela Chave Primária
+                if (reg == null) return;
+
+                reg.SaldoFinal = saldoFinal;
+                reg.Fim = System.DateTime.UtcNow;
+
+                ctx.SaveChanges(); // Salva as alterações
+            }
         }
 
         /// <summary>
-        /// Lista registros com filtros opcionais de usuário ou jogo/ação.
+        /// Lista registros com filtros opcionais de usuário ou jogo/ação (do banco).
         /// </summary>
         public static List<RegistroModel> Listar(string usuario, string jogoOuAcao)
         {
-            var q = _registros.AsEnumerable();
-            if (!string.IsNullOrWhiteSpace(usuario))
+            // Lógica ANTIGA:
+            // var q = _registros.AsEnumerable();
+
+            // Lógica NOVA:
+            using (var ctx = new DataContext())
             {
-                var f = usuario.ToLowerInvariant();
-                q = q.Where(r => r.Usuario.ToLowerInvariant().Contains(f));
+                var q = ctx.Registros.AsQueryable(); // Começa a consulta no SQL
+
+                if (!string.IsNullOrWhiteSpace(usuario))
+                {
+                    var f = usuario.ToLowerInvariant();
+                    q = q.Where(r => r.Usuario.ToLowerInvariant().Contains(f));
+                }
+                if (!string.IsNullOrWhiteSpace(jogoOuAcao))
+                {
+                    var f = jogoOuAcao.ToLowerInvariant();
+                    q = q.Where(r => r.JogoOuAcao.ToLowerInvariant() == f);
+                }
+                return q.OrderByDescending(r => r.Inicio).ToList();
             }
-            if (!string.IsNullOrWhiteSpace(jogoOuAcao))
-            {
-                var f = jogoOuAcao.ToLowerInvariant();
-                q = q.Where(r => r.JogoOuAcao.ToLowerInvariant() == f);
-            }
-            return q.OrderByDescending(r => r.Inicio).ToList();
         }
     }
 }

@@ -41,7 +41,6 @@ namespace CassinoMVC.Views
             this.btnRegistros = new System.Windows.Forms.Button();
             this.btnUsuarios = new System.Windows.Forms.Button();
             this.txtUsuário = new System.Windows.Forms.TextBox();
-            this.btnEditarUsuario = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnRoleta
@@ -123,21 +122,11 @@ namespace CassinoMVC.Views
             this.txtUsuário.Size = new System.Drawing.Size(86, 20);
             this.txtUsuário.TabIndex = 8;
             // 
-            // btnEditarUsuario
-            // 
-            this.btnEditarUsuario.Location = new System.Drawing.Point(101, 23);
-            this.btnEditarUsuario.Name = "btnEditarUsuario";
-            this.btnEditarUsuario.Size = new System.Drawing.Size(103, 20);
-            this.btnEditarUsuario.TabIndex = 9;
-            this.btnEditarUsuario.Text = "Editar Usuário";
-            this.btnEditarUsuario.UseVisualStyleBackColor = true;
-            // 
             // HomePage
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(354, 244);
-            this.Controls.Add(this.btnEditarUsuario);
             this.Controls.Add(this.txtUsuário);
             this.Controls.Add(this.btnUsuarios);
             this.Controls.Add(this.btnRegistros);
@@ -167,6 +156,5 @@ namespace CassinoMVC.Views
         private Button btnRegistros;
         private Button btnUsuarios;
         private TextBox txtUsuário;
-        private Button btnEditarUsuario;
     }
 }

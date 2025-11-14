@@ -11,6 +11,9 @@ namespace CassinoMVC.Controllers
 {
     public class UsuariosController
     {
+        // ADICIONADO: Instância do serviço
+        private readonly UsuarioService _usuarioService = new UsuarioService();
+
         // ... (Classe UsuarioListItem permanece igual) ...
         public class UsuarioListItem
         {
@@ -22,13 +25,8 @@ namespace CassinoMVC.Controllers
 
         public Usuarios Listar(string filtro = null)
         {
-            // Lógica ANTIGA:
-            // var query = Db.Context.Usuarios.AsEnumerable(); // <-- Ineficiente!
-
-            // Lógica NOVA:
             using (var ctx = new DataContext())
             {
-                // AsQueryable() garante que o .Where() seja executado no SQL
                 var query = ctx.Usuarios.AsQueryable();
 
                 if (!string.IsNullOrWhiteSpace(filtro))
@@ -44,8 +42,7 @@ namespace CassinoMVC.Controllers
             }
         }
 
-        // Métodos 'ListarFormatado', 'ListarItems', 'CarregarLista', 'ObterIdSelecionado'
-        // não acessam Db.Context e permanecem IGUAIS.
+        // ... (Métodos ListarFormatado, ListarItems, CarregarLista, ObterIdSelecionado permanecem iguais) ...
 
         public List<string> ListarFormatado(string filtro = null)
         {
@@ -82,13 +79,8 @@ namespace CassinoMVC.Controllers
             return 0;
         }
 
-
         public Usuario ObterPorId(int idUsuario)
         {
-            // Lógica ANTIGA:
-            // return Db.Context.Usuarios.FirstOrDefault(u => u.IdUsuario == idUsuario);
-
-            // Lógica NOVA:
             using (var ctx = new DataContext())
             {
                 return ctx.Usuarios.Find(idUsuario); // .Find(PK)
@@ -97,10 +89,6 @@ namespace CassinoMVC.Controllers
 
         public decimal ObterSaldoFichas(int idUsuario)
         {
-            // Lógica ANTIGA:
-            // var j = Db.Context.Jogadores.FirstOrDefault(x => x.IdUsuario == idUsuario);
-
-            // Lógica NOVA:
             using (var ctx = new DataContext())
             {
                 var j = ctx.Jogadores.FirstOrDefault(x => x.IdUsuario == idUsuario);
@@ -116,13 +104,6 @@ namespace CassinoMVC.Controllers
                 return false;
             }
 
-            // Lógica ANTIGA:
-            // var usuario = Db.Context.Usuarios.FirstOrDefault(u => u.IdUsuario == idUsuarioSelecionado);
-            // ...
-            // Db.Context.Jogadores.Remove(jogador);
-            // Db.Context.Usuarios.Remove(usuario);
-
-            // Lógica NOVA:
             using (var ctx = new DataContext())
             {
                 var usuario = ctx.Usuarios.Find(idUsuarioSelecionado);
@@ -138,8 +119,7 @@ namespace CassinoMVC.Controllers
                 }
                 ctx.Usuarios.Remove(usuario);
 
-                ctx.SaveChanges(); // <-- ADICIONADO
-
+                ctx.SaveChanges();
                 mensagem = "Usuário removido com sucesso.";
                 return true;
             }
@@ -154,10 +134,6 @@ namespace CassinoMVC.Controllers
                 return false;
             }
 
-            // Lógica ANTIGA:
-            // if (Db.Context.Usuarios.Any(u => u.NomeUsuario.Equals(nomeUsuario, StringComparison.OrdinalIgnoreCase)))
-
-            // Lógica NOVA (apenas para a verificação):
             using (var ctx = new DataContext())
             {
                 if (ctx.Usuarios.Any(u => u.NomeUsuario.Equals(nomeUsuario, StringComparison.OrdinalIgnoreCase)))
@@ -167,25 +143,20 @@ namespace CassinoMVC.Controllers
                 }
             }
 
-            // O UsuarioService já foi migrado e cuida do seu próprio DataContext
-            usuarioCriado = UsuarioService.CriarUsuario(nomeCompleto.Trim(), nomeUsuario.Trim(), senha, cargo);
+            // MODIFICADO: Chamando o método da *instância*
+            usuarioCriado = _usuarioService.CriarUsuario(nomeCompleto.Trim(), nomeUsuario.Trim(), senha, cargo);
 
             if (cargo == CargoUsuario.Jogador)
             {
                 var j = new Jogador
                 {
-                    // IdJogador = Db.Context.NextJogadorId(), // <-- REMOVIDO
-                    IdUsuario = usuarioCriado.IdUsuario, // O usuário já tem ID do banco
+                    IdUsuario = usuarioCriado.IdUsuario,
                     Apelido = nomeUsuario.Trim(),
                     Saldo = Math.Max(0m, saldoInicialJogador),
                     Email = string.Empty,
                     DataCriacao = DateTime.UtcNow
                 };
 
-                // Lógica ANTIGA:
-                // Db.Context.Jogadores.Add(j);
-
-                // Lógica NOVA (para salvar o Jogador associado):
                 using (var ctx = new DataContext())
                 {
                     ctx.Jogadores.Add(j);
@@ -198,10 +169,6 @@ namespace CassinoMVC.Controllers
 
         public bool Atualizar(int idUsuarioAlvo, string nomeCompleto, string nomeUsuario, string novaSenhaOuVazia, CargoUsuario novoCargo, int idUsuarioLogado, out string mensagem)
         {
-            // Lógica ANTIGA:
-            // var u = Db.Context.Usuarios.FirstOrDefault(x => x.IdUsuario == idUsuarioAlvo);
-
-            // Lógica NOVA (Todo o método deve estar em UM DataContext):
             using (var ctx = new DataContext())
             {
                 var u = ctx.Usuarios.Find(idUsuarioAlvo);
@@ -216,9 +183,6 @@ namespace CassinoMVC.Controllers
                     return false;
                 }
 
-                // Lógica ANTIGA:
-                // var existeLogin = Db.Context.Usuarios.Any(x => x.IdUsuario != idUsuarioAlvo && x.NomeUsuario.Equals(nomeUsuario, StringComparison.OrdinalIgnoreCase));
-                // Lógica NOVA:
                 var existeLogin = ctx.Usuarios.Any(x => x.IdUsuario != idUsuarioAlvo && x.NomeUsuario.Equals(nomeUsuario, StringComparison.OrdinalIgnoreCase));
                 if (existeLogin)
                 {
@@ -230,15 +194,12 @@ namespace CassinoMVC.Controllers
                 u.NomeUsuario = (nomeUsuario ?? string.Empty).Trim();
                 if (!string.IsNullOrEmpty(novaSenhaOuVazia))
                 {
-                    u.SenhaHash = UsuarioService.GerarHashSenha(novaSenhaOuVazia);
+                    // MODIFICADO: Chamando o método da *instância*
+                    u.SenhaHash = _usuarioService.GerarHashSenha(novaSenhaOuVazia);
                 }
                 if (u.Cargo != novoCargo)
                 {
                     u.Cargo = novoCargo;
-
-                    // Lógica ANTIGA:
-                    // var jogador = Db.Context.Jogadores.FirstOrDefault(j => j.IdUsuario == u.IdUsuario);
-                    // Lógica NOVA:
                     var jogador = ctx.Jogadores.FirstOrDefault(j => j.IdUsuario == u.IdUsuario);
                     if (novoCargo == CargoUsuario.Jogador)
                     {
@@ -246,7 +207,6 @@ namespace CassinoMVC.Controllers
                         {
                             jogador = new Jogador
                             {
-                                // IdJogador = Db.Context.NextJogadorId(), // <-- REMOVIDO
                                 IdUsuario = u.IdUsuario,
                                 Apelido = u.NomeUsuario,
                                 Saldo = 0m,
@@ -258,14 +218,13 @@ namespace CassinoMVC.Controllers
                     }
                 }
 
-                ctx.SaveChanges(); // <-- ADICIONADO
+                ctx.SaveChanges();
                 mensagem = "Usuário atualizado com sucesso.";
                 return true;
             }
         }
 
-        // Este método não acessa Db.Context, ele chama 'Remover' e 'CarregarLista'
-        // que já foram corrigidos ou não precisavam de correção.
+        // ... (Método RemoverSelecionado permanece igual) ...
         public void RemoverSelecionado(IWin32Window owner, ListBox listBox, Usuario usuarioLogado)
         {
             if (usuarioLogado == null)
@@ -282,11 +241,9 @@ namespace CassinoMVC.Controllers
             if (MessageBox.Show("Confirmar remoção?", "Remover", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
                 return;
 
-            // 'Remover' agora usa o novo DataContext
             if (Remover(id, usuarioLogado.IdUsuario, out string msg))
             {
                 MessageBox.Show(msg);
-                // 'CarregarLista' agora usa o novo DataContext (indiretamente via Listar)
                 CarregarLista(listBox);
             }
             else

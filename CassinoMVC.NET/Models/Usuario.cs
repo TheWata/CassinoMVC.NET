@@ -1,5 +1,7 @@
 using System;
-
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 namespace CassinoMVC.Models
 {
     public enum CargoUsuario
@@ -10,6 +12,7 @@ namespace CassinoMVC.Models
 
     public class Usuario
     {
+        [Key]
         public int IdUsuario { get; set; }
         public string NomeCompleto { get; set; } = string.Empty;
         public string NomeUsuario { get; set; } = string.Empty;
@@ -18,6 +21,6 @@ namespace CassinoMVC.Models
         public DateTime DataCriacao { get; set; } = DateTime.UtcNow;
 
         // Navegação 1:1 para Jogador (opcional)
-        public Jogador Jogador { get; set; }
+        public virtual ICollection<Jogador> Jogadores { get; set; }
     }
 }
