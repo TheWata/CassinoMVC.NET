@@ -38,7 +38,7 @@ namespace CassinoMVC.Services
                 IdUsuario = idUsuario,
                 Apelido = apelido,
                 Saldo = saldoInicial,
-                Email = string.Empty, // Pode adicionar este campo na tela de registro
+                Email = string.Empty, 
                 DataCriacao = DateTime.UtcNow
             };
 

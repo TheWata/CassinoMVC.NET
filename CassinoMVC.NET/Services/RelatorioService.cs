@@ -32,15 +32,10 @@ namespace CassinoMVC.Services
 
         public static void LogSessaoAposta(string nomeTipoJogo, int idJogador, decimal valorApostado, string resultado, decimal valorPremio, string resumoSessao)
         {
-            // Lógica ANTIGA:
-            // var ctx = Db.Context;
 
-            // Lógica NOVA:
             using (var ctx = new DataContext())
             {
-                // Lógica ANTIGA:
-                // var tipo = ctx.TiposJogo.Find(t => t.Nome.Equals(nomeTipoJogo, System.StringComparison.OrdinalIgnoreCase));
-                // Lógica NOVA:
+
                 var tipo = ctx.TiposJogo.FirstOrDefault(t => t.Nome.Equals(nomeTipoJogo, System.StringComparison.OrdinalIgnoreCase));
 
                 int idSessao = 0;
@@ -55,12 +50,7 @@ namespace CassinoMVC.Services
                         Resultado = resumoSessao
                     };
                     ctx.Sessoes.Add(sessao);
-                    // EF irá preencher o ID da sessão após o SaveChanges()
-                    // Se precisarmos do ID *antes* disso, teríamos que salvar aqui:
-                    // ctx.SaveChanges();
-                    // idSessao = sessao.IdSessao; 
-                    // Mas o código original não parece precisar disso imediatamente.
-                    // Vamos adiar o SaveChanges() para o fim.
+
                 }
 
                 var aposta = new Aposta
@@ -76,13 +66,9 @@ namespace CassinoMVC.Services
                     EhSessao = false
                 };
 
-                // Nota: Se o tipo != null, o EF pode ser inteligente o suficiente
-                // para associar a 'aposta' à 'sessao' acima antes do SaveChanges,
-                // mas é mais seguro salvar a sessão primeiro se você precisar do ID.
 
-                // Para este método, vamos manter o SaveChanges no final:
                 ctx.Apostas.Add(aposta);
-                ctx.SaveChanges(); // <-- ADICIONADO
+                ctx.SaveChanges();
             }
         }
 
@@ -133,10 +119,7 @@ namespace CassinoMVC.Services
 
         public static ResumoApostas GetResumoJogador(int idJogador)
         {
-            // Lógica ANTIGA:
-            // var ctx = Db.Context;
 
-            // Lógica NOVA:
             using (var ctx = new DataContext())
             {
                 var apostas = ctx.Apostas.Where(a => a.IdJogador == idJogador).ToList();

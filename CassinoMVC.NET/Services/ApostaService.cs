@@ -10,7 +10,7 @@ namespace CassinoMVC.Services
 {
     public static class ApostaService
     {
-        // ... (ValidarBase permanece o mesmo) ...
+      
         private static Tuple<DataContext, Jogador, TipoJogo> ValidarBase(int idJogador, decimal valor, string nomeTipoJogo)
         {
             var ctx = new DataContext();
@@ -39,7 +39,7 @@ namespace CassinoMVC.Services
                 var sessao = new SessaoJogo();
                 sessao.IdTipoJogo = tipoJogo.IdTipoJogo;
                 sessao.DataInicio = DateTime.UtcNow;
-                // ctx.Sessoes.Add(sessao); // <-- REMOVA ESTA LINHA
+               
 
                 var rodada = JogoRoletaService.ExecutarRodada(tipo, numero, cor, parEscolhido);
                 sessao.DataFim = DateTime.UtcNow;
@@ -56,17 +56,15 @@ namespace CassinoMVC.Services
                 var aposta = new Aposta();
                 aposta.IdJogador = jogador.IdJogador;
 
-                // --- ESTA É A MUDANÇA ---
-                // REMOVA: aposta.IdSessao = sessao.IdSessao; 
-                aposta.Sessao = sessao; // <-- ADICIONE ISSO
-                // --------------------------
+              
+                aposta.Sessao = sessao;
 
                 aposta.ValorApostado = valor;
                 aposta.Resultado = ganhou ? "Ganhou" : "Perdeu";
                 aposta.ValorPremio = premio;
                 aposta.DataAposta = DateTime.UtcNow;
 
-                ctx.Apostas.Add(aposta); // O EF vai salvar a 'aposta' E a 'sessao'
+                ctx.Apostas.Add(aposta); 
                 ctx.SaveChanges();
 
                 return aposta;
@@ -86,8 +84,7 @@ namespace CassinoMVC.Services
                 var sessao = new SessaoJogo();
                 sessao.IdTipoJogo = tipoJogo.IdTipoJogo;
                 sessao.DataInicio = DateTime.UtcNow;
-                // ctx.Sessoes.Add(sessao); // <-- REMOVA ESTA LINHA
-
+               
                 var slot = JogoSlotService.Girar();
                 sessao.DataFim = DateTime.UtcNow;
                 sessao.Resultado = slot.Resultado;
@@ -100,10 +97,8 @@ namespace CassinoMVC.Services
                 var aposta = new Aposta();
                 aposta.IdJogador = jogador.IdJogador;
 
-                // --- ESTA É A MUDANÇA ---
-                // REMOVA: aposta.IdSessao = sessao.IdSessao;
-                aposta.Sessao = sessao; // <-- ADICIONE ISSO
-                // --------------------------
+                
+                aposta.Sessao = sessao; 
 
                 aposta.ValorApostado = valor;
                 aposta.Resultado = ganhou ? "Ganhou" : "Perdeu";
@@ -130,7 +125,7 @@ namespace CassinoMVC.Services
                 var sessao = new SessaoJogo();
                 sessao.IdTipoJogo = tipoJogo.IdTipoJogo;
                 sessao.DataInicio = DateTime.UtcNow;
-                // ctx.Sessoes.Add(sessao); // <-- REMOVA ESTA LINHA
+
 
                 // ... (Lógica do jogo Blackjack) ...
                 var baralho = JogoBlackjackService.CriarBaralhoEmbaralhado();
@@ -166,11 +161,8 @@ namespace CassinoMVC.Services
                 var aposta = new Aposta();
                 aposta.IdJogador = jogador.IdJogador;
 
-                // --- ESTA É A MUDANÇA ---
-                // REMOVA: aposta.IdSessao = sessao.IdSessao;
-                aposta.Sessao = sessao; // <-- ADICIONE ISSO
-                                        // --------------------------
 
+                aposta.Sessao = sessao;
                 aposta.ValorApostado = valor;
                 aposta.Resultado = resultado;
                 aposta.ValorPremio = premio - valor > 0 ? premio - valor : 0;

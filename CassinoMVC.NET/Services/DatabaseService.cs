@@ -4,7 +4,7 @@ namespace CassinoMVC.Services
 {
     public static class DatabaseService
     {
-        
+        //por favor Lucas, altera tbm a conection string no App.config, acho que estou usando as duas
         private static readonly string _connectionString =
             @"Server=UNI-LAB13-001\SQLEXPRESS;Database=ProjetoCassinoMVC;Integrated Security=True;TrustServerCertificate=True;";
         public static SqlConnection GetConnection()

@@ -7,7 +7,6 @@ namespace CassinoMVC.Services
 {
     public static class RegistroSessaoService
     {
-        // ... (IniciarSessao permanece igual) ...
         public static int IniciarSessao(string jogoOuAcao, string usuario, decimal saldoInicial)
         {
             var reg = new RegistroModel
@@ -33,12 +32,11 @@ namespace CassinoMVC.Services
         /// <summary>
         /// Finaliza sessão (atualiza saldo final e tempo no banco).
         /// </summary>
-        // --- CORREÇÃO AQUI: Adicionar idJogador ---
         public static void FinalizarSessao(int idSessaoRegistro, int idJogador, decimal saldoFinal)
         {
             using (var ctx = new DataContext())
             {
-                // 1. Atualiza a tabela Registros (como antes)
+                // 1. Atualiza a tabela Registros
                 var reg = ctx.Registros.Find(idSessaoRegistro);
                 if (reg != null)
                 {
@@ -57,7 +55,6 @@ namespace CassinoMVC.Services
             }
         }
 
-        // ... (Listar permanece igual) ...
         public static List<RegistroModel> Listar(string usuario, string jogoOuAcao)
         {
             using (var ctx = new DataContext())
