@@ -11,6 +11,7 @@ namespace CassinoMVC.Controllers
 {
     public class UsuariosController
     {
+        // ... (Classe UsuarioListItem permanece igual) ...
         public class UsuarioListItem
         {
             public int Id { get; set; }
@@ -18,20 +19,33 @@ namespace CassinoMVC.Controllers
             public override string ToString() => Texto;
         }
 
+
         public Usuarios Listar(string filtro = null)
         {
-            var query = Db.Context.Usuarios.AsEnumerable();
-            if (!string.IsNullOrWhiteSpace(filtro))
+            // Lógica ANTIGA:
+            // var query = Db.Context.Usuarios.AsEnumerable(); // <-- Ineficiente!
+
+            // Lógica NOVA:
+            using (var ctx = new DataContext())
             {
-                var f = filtro.Trim();
-                query = query.Where(u =>
-                    (!string.IsNullOrEmpty(u.NomeUsuario) && u.NomeUsuario.IndexOf(f, StringComparison.OrdinalIgnoreCase) >= 0) ||
-                    (!string.IsNullOrEmpty(u.NomeCompleto) && u.NomeCompleto.IndexOf(f, StringComparison.OrdinalIgnoreCase) >= 0)
-                );
+                // AsQueryable() garante que o .Where() seja executado no SQL
+                var query = ctx.Usuarios.AsQueryable();
+
+                if (!string.IsNullOrWhiteSpace(filtro))
+                {
+                    var f = filtro.Trim();
+                    query = query.Where(u =>
+                        (!string.IsNullOrEmpty(u.NomeUsuario) && u.NomeUsuario.IndexOf(f, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                        (!string.IsNullOrEmpty(u.NomeCompleto) && u.NomeCompleto.IndexOf(f, StringComparison.OrdinalIgnoreCase) >= 0)
+                    );
+                }
+                var ordenados = query.OrderBy(u => u.NomeUsuario).ToList();
+                return new Usuarios(ordenados);
             }
-            var ordenados = query.OrderBy(u => u.NomeUsuario).ToList();
-            return new Usuarios(ordenados);
         }
+
+        // Métodos 'ListarFormatado', 'ListarItems', 'CarregarLista', 'ObterIdSelecionado'
+        // não acessam Db.Context e permanecem IGUAIS.
 
         public List<string> ListarFormatado(string filtro = null)
         {
@@ -68,15 +82,30 @@ namespace CassinoMVC.Controllers
             return 0;
         }
 
+
         public Usuario ObterPorId(int idUsuario)
         {
-            return Db.Context.Usuarios.FirstOrDefault(u => u.IdUsuario == idUsuario);
+            // Lógica ANTIGA:
+            // return Db.Context.Usuarios.FirstOrDefault(u => u.IdUsuario == idUsuario);
+
+            // Lógica NOVA:
+            using (var ctx = new DataContext())
+            {
+                return ctx.Usuarios.Find(idUsuario); // .Find(PK)
+            }
         }
 
         public decimal ObterSaldoFichas(int idUsuario)
         {
-            var j = Db.Context.Jogadores.FirstOrDefault(x => x.IdUsuario == idUsuario);
-            return j != null ? j.Saldo : 0m;
+            // Lógica ANTIGA:
+            // var j = Db.Context.Jogadores.FirstOrDefault(x => x.IdUsuario == idUsuario);
+
+            // Lógica NOVA:
+            using (var ctx = new DataContext())
+            {
+                var j = ctx.Jogadores.FirstOrDefault(x => x.IdUsuario == idUsuario);
+                return j != null ? j.Saldo : 0m;
+            }
         }
 
         public bool Remover(int idUsuarioSelecionado, int idUsuarioLogado, out string mensagem)
@@ -86,20 +115,34 @@ namespace CassinoMVC.Controllers
                 mensagem = "Você não pode remover este usuário.";
                 return false;
             }
-            var usuario = Db.Context.Usuarios.FirstOrDefault(u => u.IdUsuario == idUsuarioSelecionado);
-            if (usuario == null)
+
+            // Lógica ANTIGA:
+            // var usuario = Db.Context.Usuarios.FirstOrDefault(u => u.IdUsuario == idUsuarioSelecionado);
+            // ...
+            // Db.Context.Jogadores.Remove(jogador);
+            // Db.Context.Usuarios.Remove(usuario);
+
+            // Lógica NOVA:
+            using (var ctx = new DataContext())
             {
-                mensagem = "Usuário não encontrado.";
-                return false;
+                var usuario = ctx.Usuarios.Find(idUsuarioSelecionado);
+                if (usuario == null)
+                {
+                    mensagem = "Usuário não encontrado.";
+                    return false;
+                }
+                var jogador = ctx.Jogadores.FirstOrDefault(j => j.IdUsuario == idUsuarioSelecionado);
+                if (jogador != null)
+                {
+                    ctx.Jogadores.Remove(jogador);
+                }
+                ctx.Usuarios.Remove(usuario);
+
+                ctx.SaveChanges(); // <-- ADICIONADO
+
+                mensagem = "Usuário removido com sucesso.";
+                return true;
             }
-            var jogador = Db.Context.Jogadores.FirstOrDefault(j => j.IdUsuario == idUsuarioSelecionado);
-            if (jogador != null)
-            {
-                Db.Context.Jogadores.Remove(jogador);
-            }
-            Db.Context.Usuarios.Remove(usuario);
-            mensagem = "Usuário removido com sucesso.";
-            return true;
         }
 
         public bool Criar(string nomeCompleto, string nomeUsuario, string senha, CargoUsuario cargo, decimal saldoInicialJogador, out Usuario usuarioCriado, out string mensagem)
@@ -110,24 +153,44 @@ namespace CassinoMVC.Controllers
                 mensagem = "Nome, usuário e senha são obrigatórios.";
                 return false;
             }
-            if (Db.Context.Usuarios.Any(u => u.NomeUsuario.Equals(nomeUsuario, StringComparison.OrdinalIgnoreCase)))
+
+            // Lógica ANTIGA:
+            // if (Db.Context.Usuarios.Any(u => u.NomeUsuario.Equals(nomeUsuario, StringComparison.OrdinalIgnoreCase)))
+
+            // Lógica NOVA (apenas para a verificação):
+            using (var ctx = new DataContext())
             {
-                mensagem = "Já existe um usuário com este login.";
-                return false;
+                if (ctx.Usuarios.Any(u => u.NomeUsuario.Equals(nomeUsuario, StringComparison.OrdinalIgnoreCase)))
+                {
+                    mensagem = "Já existe um usuário com este login.";
+                    return false;
+                }
             }
+
+            // O UsuarioService já foi migrado e cuida do seu próprio DataContext
             usuarioCriado = UsuarioService.CriarUsuario(nomeCompleto.Trim(), nomeUsuario.Trim(), senha, cargo);
+
             if (cargo == CargoUsuario.Jogador)
             {
                 var j = new Jogador
                 {
-                    IdJogador = Db.Context.NextJogadorId(),
-                    IdUsuario = usuarioCriado.IdUsuario,
+                    // IdJogador = Db.Context.NextJogadorId(), // <-- REMOVIDO
+                    IdUsuario = usuarioCriado.IdUsuario, // O usuário já tem ID do banco
                     Apelido = nomeUsuario.Trim(),
                     Saldo = Math.Max(0m, saldoInicialJogador),
                     Email = string.Empty,
                     DataCriacao = DateTime.UtcNow
                 };
-                Db.Context.Jogadores.Add(j);
+
+                // Lógica ANTIGA:
+                // Db.Context.Jogadores.Add(j);
+
+                // Lógica NOVA (para salvar o Jogador associado):
+                using (var ctx = new DataContext())
+                {
+                    ctx.Jogadores.Add(j);
+                    ctx.SaveChanges();
+                }
             }
             mensagem = "Usuário criado com sucesso.";
             return true;
@@ -135,54 +198,74 @@ namespace CassinoMVC.Controllers
 
         public bool Atualizar(int idUsuarioAlvo, string nomeCompleto, string nomeUsuario, string novaSenhaOuVazia, CargoUsuario novoCargo, int idUsuarioLogado, out string mensagem)
         {
-            var u = Db.Context.Usuarios.FirstOrDefault(x => x.IdUsuario == idUsuarioAlvo);
-            if (u == null)
+            // Lógica ANTIGA:
+            // var u = Db.Context.Usuarios.FirstOrDefault(x => x.IdUsuario == idUsuarioAlvo);
+
+            // Lógica NOVA (Todo o método deve estar em UM DataContext):
+            using (var ctx = new DataContext())
             {
-                mensagem = "Usuário não encontrado.";
-                return false;
-            }
-            if (idUsuarioLogado <= idUsuarioAlvo && u.Cargo != novoCargo)
-            {
-                mensagem = "Você não pode alterar o cargo deste usuário.";
-                return false;
-            }
-            var existeLogin = Db.Context.Usuarios.Any(x => x.IdUsuario != idUsuarioAlvo && x.NomeUsuario.Equals(nomeUsuario, StringComparison.OrdinalIgnoreCase));
-            if (existeLogin)
-            {
-                mensagem = "Já existe um usuário com este login.";
-                return false;
-            }
-            u.NomeCompleto = (nomeCompleto ?? string.Empty).Trim();
-            u.NomeUsuario = (nomeUsuario ?? string.Empty).Trim();
-            if (!string.IsNullOrEmpty(novaSenhaOuVazia))
-            {
-                u.SenhaHash = UsuarioService.GerarHashSenha(novaSenhaOuVazia);
-            }
-            if (u.Cargo != novoCargo)
-            {
-                u.Cargo = novoCargo;
-                var jogador = Db.Context.Jogadores.FirstOrDefault(j => j.IdUsuario == u.IdUsuario);
-                if (novoCargo == CargoUsuario.Jogador)
+                var u = ctx.Usuarios.Find(idUsuarioAlvo);
+                if (u == null)
                 {
-                    if (jogador == null)
+                    mensagem = "Usuário não encontrado.";
+                    return false;
+                }
+                if (idUsuarioLogado <= idUsuarioAlvo && u.Cargo != novoCargo)
+                {
+                    mensagem = "Você não pode alterar o cargo deste usuário.";
+                    return false;
+                }
+
+                // Lógica ANTIGA:
+                // var existeLogin = Db.Context.Usuarios.Any(x => x.IdUsuario != idUsuarioAlvo && x.NomeUsuario.Equals(nomeUsuario, StringComparison.OrdinalIgnoreCase));
+                // Lógica NOVA:
+                var existeLogin = ctx.Usuarios.Any(x => x.IdUsuario != idUsuarioAlvo && x.NomeUsuario.Equals(nomeUsuario, StringComparison.OrdinalIgnoreCase));
+                if (existeLogin)
+                {
+                    mensagem = "Já existe um usuário com este login.";
+                    return false;
+                }
+
+                u.NomeCompleto = (nomeCompleto ?? string.Empty).Trim();
+                u.NomeUsuario = (nomeUsuario ?? string.Empty).Trim();
+                if (!string.IsNullOrEmpty(novaSenhaOuVazia))
+                {
+                    u.SenhaHash = UsuarioService.GerarHashSenha(novaSenhaOuVazia);
+                }
+                if (u.Cargo != novoCargo)
+                {
+                    u.Cargo = novoCargo;
+
+                    // Lógica ANTIGA:
+                    // var jogador = Db.Context.Jogadores.FirstOrDefault(j => j.IdUsuario == u.IdUsuario);
+                    // Lógica NOVA:
+                    var jogador = ctx.Jogadores.FirstOrDefault(j => j.IdUsuario == u.IdUsuario);
+                    if (novoCargo == CargoUsuario.Jogador)
                     {
-                        jogador = new Jogador
+                        if (jogador == null)
                         {
-                            IdJogador = Db.Context.NextJogadorId(),
-                            IdUsuario = u.IdUsuario,
-                            Apelido = u.NomeUsuario,
-                            Saldo = 0m,
-                            Email = string.Empty,
-                            DataCriacao = DateTime.UtcNow
-                        };
-                        Db.Context.Jogadores.Add(jogador);
+                            jogador = new Jogador
+                            {
+                                // IdJogador = Db.Context.NextJogadorId(), // <-- REMOVIDO
+                                IdUsuario = u.IdUsuario,
+                                Apelido = u.NomeUsuario,
+                                Saldo = 0m,
+                                Email = string.Empty,
+                                DataCriacao = DateTime.UtcNow
+                            };
+                            ctx.Jogadores.Add(jogador);
+                        }
                     }
                 }
+
+                ctx.SaveChanges(); // <-- ADICIONADO
+                mensagem = "Usuário atualizado com sucesso.";
+                return true;
             }
-            mensagem = "Usuário atualizado com sucesso.";
-            return true;
         }
 
+        // Este método não acessa Db.Context, ele chama 'Remover' e 'CarregarLista'
+        // que já foram corrigidos ou não precisavam de correção.
         public void RemoverSelecionado(IWin32Window owner, ListBox listBox, Usuario usuarioLogado)
         {
             if (usuarioLogado == null)
@@ -198,9 +281,12 @@ namespace CassinoMVC.Controllers
             }
             if (MessageBox.Show("Confirmar remoção?", "Remover", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
                 return;
+
+            // 'Remover' agora usa o novo DataContext
             if (Remover(id, usuarioLogado.IdUsuario, out string msg))
             {
                 MessageBox.Show(msg);
+                // 'CarregarLista' agora usa o novo DataContext (indiretamente via Listar)
                 CarregarLista(listBox);
             }
             else

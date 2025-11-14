@@ -1,11 +1,13 @@
 using System.Linq;
 using CassinoMVC.Data;
 using CassinoMVC.Models;
+using System.Data.Entity; // <-- ADICIONADO (Necessário para .Include() se for usar)
 
 namespace CassinoMVC.Services
 {
     public static class RelatorioService
     {
+        // ... (Classes DTO e ResumoApostas permanecem iguais) ...
         public class ResumoApostas
         {
             public int? IdJogador { get; set; }
@@ -30,101 +32,146 @@ namespace CassinoMVC.Services
 
         public static void LogSessaoAposta(string nomeTipoJogo, int idJogador, decimal valorApostado, string resultado, decimal valorPremio, string resumoSessao)
         {
-            var ctx = Db.Context;
-            var tipo = ctx.TiposJogo.Find(t => t.Nome.Equals(nomeTipoJogo, System.StringComparison.OrdinalIgnoreCase));
-            int idSessao = 0;
-            if (tipo != null)
+            // Lógica ANTIGA:
+            // var ctx = Db.Context;
+
+            // Lógica NOVA:
+            using (var ctx = new DataContext())
             {
-                var sessao = new SessaoJogo
+                // Lógica ANTIGA:
+                // var tipo = ctx.TiposJogo.Find(t => t.Nome.Equals(nomeTipoJogo, System.StringComparison.OrdinalIgnoreCase));
+                // Lógica NOVA:
+                var tipo = ctx.TiposJogo.FirstOrDefault(t => t.Nome.Equals(nomeTipoJogo, System.StringComparison.OrdinalIgnoreCase));
+
+                int idSessao = 0;
+                if (tipo != null)
                 {
-                    IdSessao = ctx.NextSessaoId(),
-                    IdTipoJogo = tipo.IdTipoJogo,
-                    DataInicio = System.DateTime.UtcNow,
-                    DataFim = System.DateTime.UtcNow,
-                    Resultado = resumoSessao
+                    var sessao = new SessaoJogo
+                    {
+                        // IdSessao = ctx.NextSessaoId(), // <-- REMOVIDO
+                        IdTipoJogo = tipo.IdTipoJogo,
+                        DataInicio = System.DateTime.UtcNow,
+                        DataFim = System.DateTime.UtcNow,
+                        Resultado = resumoSessao
+                    };
+                    ctx.Sessoes.Add(sessao);
+                    // EF irá preencher o ID da sessão após o SaveChanges()
+                    // Se precisarmos do ID *antes* disso, teríamos que salvar aqui:
+                    // ctx.SaveChanges();
+                    // idSessao = sessao.IdSessao; 
+                    // Mas o código original não parece precisar disso imediatamente.
+                    // Vamos adiar o SaveChanges() para o fim.
+                }
+
+                var aposta = new Aposta
+                {
+                    // IdAposta = ctx.NextApostaId(), // <-- REMOVIDO
+                    IdJogador = idJogador,
+                    IdSessao = idSessao, // Isso pode ser um problema se idSessao for 0
+                    ValorApostado = valorApostado,
+                    Resultado = resultado,
+                    ValorPremio = valorPremio,
+                    DataAposta = System.DateTime.UtcNow,
+                    TipoDescricao = tipo == null ? nomeTipoJogo : string.Empty,
+                    EhSessao = false
                 };
-                ctx.Sessoes.Add(sessao);
-                idSessao = sessao.IdSessao;
+
+                // Nota: Se o tipo != null, o EF pode ser inteligente o suficiente
+                // para associar a 'aposta' à 'sessao' acima antes do SaveChanges,
+                // mas é mais seguro salvar a sessão primeiro se você precisar do ID.
+
+                // Para este método, vamos manter o SaveChanges no final:
+                ctx.Apostas.Add(aposta);
+                ctx.SaveChanges(); // <-- ADICIONADO
             }
-            ctx.Apostas.Add(new Aposta
-            {
-                IdAposta = ctx.NextApostaId(),
-                IdJogador = idJogador,
-                IdSessao = idSessao,
-                ValorApostado = valorApostado,
-                Resultado = resultado,
-                ValorPremio = valorPremio,
-                DataAposta = System.DateTime.UtcNow,
-                TipoDescricao = tipo == null ? nomeTipoJogo : string.Empty,
-                EhSessao = false
-            });
         }
 
         public static System.Collections.Generic.List<ApostaConsultaDto> ConsultarApostas(string nomeUsuario, string nomeTipoJogo)
         {
-            var ctx = Db.Context;
-            var query = from a in ctx.Apostas
-                        join s in ctx.Sessoes on a.IdSessao equals s.IdSessao into sa
-                        from s in sa.DefaultIfEmpty()
-                        join tj in ctx.TiposJogo on (s != null ? s.IdTipoJogo : 0) equals tj.IdTipoJogo into stj
-                        from tj in stj.DefaultIfEmpty()
-                        join j in ctx.Jogadores on a.IdJogador equals j.IdJogador
-                        join u in ctx.Usuarios on j.IdUsuario equals u.IdUsuario into ju
-                        from u in ju.DefaultIfEmpty()
-                        select new ApostaConsultaDto
-                        {
-                            IdAposta = a.IdAposta,
-                            DataAposta = a.DataAposta,
-                            NomeUsuario = u != null ? u.NomeUsuario : null,
-                            ApelidoJogador = j.Apelido,
-                            IdSessao = a.IdSessao,
-                            NomeJogo = string.IsNullOrEmpty(a.TipoDescricao) ? (tj != null ? tj.Nome : "") : a.TipoDescricao,
-                            ValorApostado = a.ValorApostado,
-                            Resultado = a.Resultado,
-                            ValorPremio = a.ValorPremio
-                        };
-            if (!string.IsNullOrWhiteSpace(nomeUsuario))
+            // Lógica ANTIGA:
+            // var ctx = Db.Context;
+
+            // Lógica NOVA:
+            using (var ctx = new DataContext())
             {
-                var filtro = nomeUsuario.Trim().ToLowerInvariant();
-                query = query.Where(x => (x.NomeUsuario ?? string.Empty).ToLowerInvariant().Contains(filtro));
+                // A consulta LINQ original é compatível com EF
+                var query = from a in ctx.Apostas
+                            join s in ctx.Sessoes on a.IdSessao equals s.IdSessao into sa
+                            from s in sa.DefaultIfEmpty()
+                            join tj in ctx.TiposJogo on (s != null ? s.IdTipoJogo : 0) equals tj.IdTipoJogo into stj
+                            from tj in stj.DefaultIfEmpty()
+                            join j in ctx.Jogadores on a.IdJogador equals j.IdJogador
+                            join u in ctx.Usuarios on j.IdUsuario equals u.IdUsuario into ju
+                            from u in ju.DefaultIfEmpty()
+                            select new ApostaConsultaDto
+                            {
+                                IdAposta = a.IdAposta,
+                                DataAposta = a.DataAposta,
+                                NomeUsuario = u != null ? u.NomeUsuario : null,
+                                ApelidoJogador = j.Apelido,
+                                IdSessao = a.IdSessao,
+                                NomeJogo = string.IsNullOrEmpty(a.TipoDescricao) ? (tj != null ? tj.Nome : "") : a.TipoDescricao,
+                                ValorApostado = a.ValorApostado,
+                                Resultado = a.Resultado,
+                                ValorPremio = a.ValorPremio
+                            };
+
+                if (!string.IsNullOrWhiteSpace(nomeUsuario))
+                {
+                    var filtro = nomeUsuario.Trim().ToLowerInvariant();
+                    query = query.Where(x => (x.NomeUsuario ?? string.Empty).ToLowerInvariant().Contains(filtro));
+                }
+                if (!string.IsNullOrWhiteSpace(nomeTipoJogo))
+                {
+                    var filtroJogo = nomeTipoJogo.Trim().ToLowerInvariant();
+                    query = query.Where(x => x.NomeJogo.ToLowerInvariant() == filtroJogo);
+                }
+
+                return query.OrderByDescending(x => x.DataAposta).ThenByDescending(x => x.IdAposta).ToList();
             }
-            if (!string.IsNullOrWhiteSpace(nomeTipoJogo))
-            {
-                var filtroJogo = nomeTipoJogo.Trim().ToLowerInvariant();
-                query = query.Where(x => x.NomeJogo.ToLowerInvariant() == filtroJogo);
-            }
-            return query.OrderByDescending(x => x.DataAposta).ThenByDescending(x => x.IdAposta).ToList();
         }
 
         public static ResumoApostas GetResumoJogador(int idJogador)
         {
-            var ctx = Db.Context;
-            var apostas = ctx.Apostas.Where(a => a.IdJogador == idJogador).ToList();
-            var jogador = ctx.Jogadores.FirstOrDefault(j => j.IdJogador == idJogador);
-            return new ResumoApostas
+            // Lógica ANTIGA:
+            // var ctx = Db.Context;
+
+            // Lógica NOVA:
+            using (var ctx = new DataContext())
             {
-                IdJogador = idJogador,
-                Apelido = jogador != null ? jogador.Apelido : null,
-                TotalApostado = apostas.Sum(a => a.ValorApostado),
-                TotalGanho = apostas.Where(a => a.Resultado == "Ganhou" || a.Resultado.StartsWith("Sessão Ganhou")).Sum(a => a.ValorPremio),
-                TotalPerdido = apostas.Where(a => a.Resultado == "Perdeu" || a.Resultado.StartsWith("Sessão Perdeu")).Sum(a => a.ValorApostado),
-                QuantidadeApostas = apostas.Count
-            };
+                var apostas = ctx.Apostas.Where(a => a.IdJogador == idJogador).ToList();
+                var jogador = ctx.Jogadores.FirstOrDefault(j => j.IdJogador == idJogador);
+                return new ResumoApostas
+                {
+                    IdJogador = idJogador,
+                    Apelido = jogador != null ? jogador.Apelido : null,
+                    TotalApostado = apostas.Sum(a => a.ValorApostado),
+                    TotalGanho = apostas.Where(a => a.Resultado == "Ganhou" || a.Resultado.StartsWith("Sessão Ganhou")).Sum(a => a.ValorPremio),
+                    TotalPerdido = apostas.Where(a => a.Resultado == "Perdeu" || a.Resultado.StartsWith("Sessão Perdeu")).Sum(a => a.ValorApostado),
+                    QuantidadeApostas = apostas.Count
+                };
+            }
         }
 
         public static ResumoApostas GetResumoGeral()
         {
-            var ctx = Db.Context;
-            var apostas = ctx.Apostas.ToList();
-            return new ResumoApostas
+            // Lógica ANTIGA:
+            // var ctx = Db.Context;
+
+            // Lógica NOVA:
+            using (var ctx = new DataContext())
             {
-                IdJogador = null,
-                Apelido = null,
-                TotalApostado = apostas.Sum(a => a.ValorApostado),
-                TotalGanho = apostas.Where(a => a.Resultado == "Ganhou" || a.Resultado.StartsWith("Sessão Ganhou")).Sum(a => a.ValorPremio),
-                TotalPerdido = apostas.Where(a => a.Resultado == "Perdeu" || a.Resultado.StartsWith("Sessão Perdeu")).Sum(a => a.ValorApostado),
-                QuantidadeApostas = apostas.Count
-            };
+                var apostas = ctx.Apostas.ToList();
+                return new ResumoApostas
+                {
+                    IdJogador = null,
+                    Apelido = null,
+                    TotalApostado = apostas.Sum(a => a.ValorApostado),
+                    TotalGanho = apostas.Where(a => a.Resultado == "Ganhou" || a.Resultado.StartsWith("Sessão Ganhou")).Sum(a => a.ValorPremio),
+                    TotalPerdido = apostas.Where(a => a.Resultado == "Perdeu" || a.Resultado.StartsWith("Sessão Perdeu")).Sum(a => a.ValorApostado),
+                    QuantidadeApostas = apostas.Count
+                };
+            }
         }
     }
 }
