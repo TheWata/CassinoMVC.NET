@@ -1,90 +1,81 @@
 using System.Collections.Generic;
 using System.Linq;
 using CassinoMVC.Models;
-using CassinoMVC.Data; // <-- ADICIONADO
+using CassinoMVC.Data;
 
 namespace CassinoMVC.Services
 {
-    /// <summary>
-    /// Serviço para gerenciar início/fim de sessões de jogo e compras.
-    /// AGORA USANDO O BANCO DE DADOS (EF).
-    /// </summary>
     public static class RegistroSessaoService
     {
-        // REMOVIDO o banco de dados em memória
-        // private static readonly List<RegistroModel> _registros = new List<RegistroModel>();
-        // private static int _nextId = 1;
-
-        /// <summary>
-        /// Inicia sessão e retorna id. (Salva no banco)
-        /// </summary>
+        // ... (IniciarSessao permanece igual) ...
         public static int IniciarSessao(string jogoOuAcao, string usuario, decimal saldoInicial)
         {
             var reg = new RegistroModel
             {
-                // Id = _nextId++, // <-- REMOVIDO (será definido pelo SQL Server)
                 Usuario = usuario,
                 JogoOuAcao = jogoOuAcao,
                 SaldoInicial = saldoInicial,
-                SaldoFinal = saldoInicial, // será atualizado
+                SaldoFinal = saldoInicial,
                 Inicio = System.DateTime.UtcNow,
                 Fim = System.DateTime.UtcNow
             };
 
-            // Lógica NOVA:
             using (var ctx = new DataContext())
             {
                 ctx.Registros.Add(reg);
-                ctx.SaveChanges(); // Salva no banco
+                ctx.SaveChanges();
             }
 
-            return reg.Id; // Retorna o ID gerado pelo banco
+            return reg.Id;
         }
+
 
         /// <summary>
         /// Finaliza sessão (atualiza saldo final e tempo no banco).
         /// </summary>
-        public static void FinalizarSessao(int id, decimal saldoFinal)
+        // --- CORREÇÃO AQUI: Adicionar idJogador ---
+        public static void FinalizarSessao(int idSessaoRegistro, int idJogador, decimal saldoFinal)
         {
-            // Lógica ANTIGA:
-            // var reg = _registros.FirstOrDefault(r => r.Id == id);
-
-            // Lógica NOVA:
             using (var ctx = new DataContext())
             {
-                var reg = ctx.Registros.Find(id); // Busca pela Chave Primária
-                if (reg == null) return;
+                // 1. Atualiza a tabela Registros (como antes)
+                var reg = ctx.Registros.Find(idSessaoRegistro);
+                if (reg != null)
+                {
+                    reg.SaldoFinal = saldoFinal;
+                    reg.Fim = System.DateTime.UtcNow;
+                }
 
-                reg.SaldoFinal = saldoFinal;
-                reg.Fim = System.DateTime.UtcNow;
+                // 2. ADICIONADO: Atualiza a tabela Jogadores
+                var jogador = ctx.Jogadores.Find(idJogador);
+                if (jogador != null)
+                {
+                    jogador.Saldo = saldoFinal;
+                }
 
-                ctx.SaveChanges(); // Salva as alterações
+                ctx.SaveChanges(); // Salva AMBAS as alterações
             }
         }
 
-        /// <summary>
-        /// Lista registros com filtros opcionais de usuário ou jogo/ação (do banco).
-        /// </summary>
+        // ... (Listar permanece igual) ...
         public static List<RegistroModel> Listar(string usuario, string jogoOuAcao)
         {
-            // Lógica ANTIGA:
-            // var q = _registros.AsEnumerable();
-
-            // Lógica NOVA:
             using (var ctx = new DataContext())
             {
-                var q = ctx.Registros.AsQueryable(); // Começa a consulta no SQL
+                var q = ctx.Registros.AsQueryable();
 
                 if (!string.IsNullOrWhiteSpace(usuario))
                 {
-                    var f = usuario.ToLowerInvariant();
-                    q = q.Where(r => r.Usuario.ToLowerInvariant().Contains(f));
+                    var f = usuario.ToLower();
+                    q = q.Where(r => r.Usuario != null && r.Usuario.ToLower().Contains(f));
                 }
+
                 if (!string.IsNullOrWhiteSpace(jogoOuAcao))
                 {
-                    var f = jogoOuAcao.ToLowerInvariant();
-                    q = q.Where(r => r.JogoOuAcao.ToLowerInvariant() == f);
+                    var f = jogoOuAcao.ToLower();
+                    q = q.Where(r => r.JogoOuAcao != null && r.JogoOuAcao.ToLower() == f);
                 }
+
                 return q.OrderByDescending(r => r.Inicio).ToList();
             }
         }

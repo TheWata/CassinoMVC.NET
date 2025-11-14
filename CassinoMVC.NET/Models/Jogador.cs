@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CassinoMVC.Models
 {
+    [Table("Jogadores")]
     public class Jogador
     {
         [Key]

@@ -109,7 +109,7 @@ namespace CassinoMVC.Services
                                 DataAposta = a.DataAposta,
                                 NomeUsuario = u != null ? u.NomeUsuario : null,
                                 ApelidoJogador = j.Apelido,
-                                IdSessao = a.IdSessao,
+                                IdSessao = (int)a.IdSessao,
                                 NomeJogo = string.IsNullOrEmpty(a.TipoDescricao) ? (tj != null ? tj.Nome : "") : a.TipoDescricao,
                                 ValorApostado = a.ValorApostado,
                                 Resultado = a.Resultado,

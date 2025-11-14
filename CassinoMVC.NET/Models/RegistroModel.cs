@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CassinoMVC.Models
 {
@@ -6,6 +7,7 @@ namespace CassinoMVC.Models
     /// Registro de sessão de jogo / compra.
     /// Simplificado: um item por abertura de tela (ou compra) contendo saldo inicial/final.
     /// </summary>
+    [Table("Registros")]
     public class RegistroModel
     {
         public int Id { get; set; } // Id da sessão

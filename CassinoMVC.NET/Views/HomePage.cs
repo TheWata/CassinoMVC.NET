@@ -41,7 +41,11 @@ namespace CassinoMVC.Views
             using (var frm = new Jogos.Slots())
             {
                 frm.CarregarContexto(_usuarioLogado, _jogadorLogado);
-                frm.FormClosed += delegate { RegistroSessaoService.FinalizarSessao(idSessao, _jogadorLogado.Saldo); txtFichas.Text = _jogadorLogado.Saldo.ToString("F2"); };
+                // --- CORREÇÃO AQUI: Adicionar _jogadorLogado.IdJogador ---
+                frm.FormClosed += delegate {
+                    RegistroSessaoService.FinalizarSessao(idSessao, _jogadorLogado.IdJogador, _jogadorLogado.Saldo);
+                    txtFichas.Text = _jogadorLogado.Saldo.ToString("F2");
+                };
                 frm.ShowDialog(this);
             }
         }
@@ -53,7 +57,11 @@ namespace CassinoMVC.Views
             using (var frm = new Jogos.Roleta())
             {
                 frm.CarregarContexto(_usuarioLogado, _jogadorLogado);
-                frm.FormClosed += delegate { RegistroSessaoService.FinalizarSessao(idSessao, _jogadorLogado.Saldo); txtFichas.Text = _jogadorLogado.Saldo.ToString("F2"); };
+                // --- CORREÇÃO AQUI: Adicionar _jogadorLogado.IdJogador ---
+                frm.FormClosed += delegate {
+                    RegistroSessaoService.FinalizarSessao(idSessao, _jogadorLogado.IdJogador, _jogadorLogado.Saldo);
+                    txtFichas.Text = _jogadorLogado.Saldo.ToString("F2");
+                };
                 frm.ShowDialog(this);
             }
         }
@@ -65,8 +73,41 @@ namespace CassinoMVC.Views
             using (var frm = new Jogos.BlackJack())
             {
                 frm.CarregarContexto(_usuarioLogado, _jogadorLogado);
-                frm.FormClosed += delegate { RegistroSessaoService.FinalizarSessao(idSessao, _jogadorLogado.Saldo); txtFichas.Text = _jogadorLogado.Saldo.ToString("F2"); };
+                // --- CORREÇÃO AQUI: Adicionar _jogadorLogado.IdJogador ---
+                frm.FormClosed += delegate {
+                    RegistroSessaoService.FinalizarSessao(idSessao, _jogadorLogado.IdJogador, _jogadorLogado.Saldo);
+                    txtFichas.Text = _jogadorLogado.Saldo.ToString("F2");
+                };
                 frm.ShowDialog(this);
+            }
+        }
+
+        // ... (BtnSlots_Click, BtnRoleta_Click, BtnBlackJack_Click) ...
+
+        private void BtnComprarFichas_Click(object sender, EventArgs e)
+        {
+            if (_jogadorLogado == null || _usuarioLogado == null) return;
+            string input = MostrarInput("Quantidade de fichas:", "Comprar Fichas", "100");
+            decimal valor;
+            if (decimal.TryParse(input, out valor) && valor > 0)
+            {
+                int idSessao = RegistroSessaoService.IniciarSessao("Compra de fichas", _usuarioLogado.NomeUsuario, _jogadorLogado.Saldo);
+
+                if (_compraController.Comprar(_jogadorLogado.IdJogador, valor))
+                {
+                    _jogadorLogado.Saldo += valor; // Atualiza o saldo local
+
+                    // --- CORREÇÃO AQUI: Adicionar _jogadorLogado.IdJogador ---
+                    RegistroSessaoService.FinalizarSessao(idSessao, _jogadorLogado.IdJogador, _jogadorLogado.Saldo);
+
+                    txtFichas.Text = _jogadorLogado.Saldo.ToString("F2");
+                    MessageBox.Show("Fichas compradas com sucesso.");
+                }
+                // Opcional: Se a compra falhar, finalizar a sessão de registro mesmo assim
+                else
+                {
+                    RegistroSessaoService.FinalizarSessao(idSessao, _jogadorLogado.IdJogador, _jogadorLogado.Saldo);
+                }
             }
         }
 
@@ -74,22 +115,7 @@ namespace CassinoMVC.Views
         private void BtnRoleta_Click(object sender, EventArgs e) { AbrirRoleta(); }
         private void BtnBlackJack_Click(object sender, EventArgs e) { AbrirBlackjack(); }
 
-        private void BtnComprarFichas_Click(object sender, EventArgs e)
-        {
-            if (_jogadorLogado == null || _usuarioLogado == null) return;
-            string input = MostrarInput("Quantidade de fichas:", "Comprar Fichas", "100");
-            decimal valor;
-            if (decimal.TryParse(input, out valor) && valor >0)
-            {
-                int idSessao = RegistroSessaoService.IniciarSessao("Compra de fichas", _usuarioLogado.NomeUsuario, _jogadorLogado.Saldo);
-                if (_compraController.Comprar(_jogadorLogado.IdJogador, valor))
-                {
-                    RegistroSessaoService.FinalizarSessao(idSessao, _jogadorLogado.Saldo);
-                    txtFichas.Text = _jogadorLogado.Saldo.ToString("F2");
-                    MessageBox.Show("Fichas compradas com sucesso.");
-                }
-            }
-        }
+
 
         private string MostrarInput(string mensagem, string titulo, string valorPadrao)
         {

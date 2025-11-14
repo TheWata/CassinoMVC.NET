@@ -11,7 +11,7 @@ namespace CassinoMVC.Controllers
 {
     public class UsuariosController
     {
-        // ADICIONADO: Instância do serviço
+        // Instância do serviço (Correto)
         private readonly UsuarioService _usuarioService = new UsuarioService();
 
         // ... (Classe UsuarioListItem permanece igual) ...
@@ -31,18 +31,22 @@ namespace CassinoMVC.Controllers
 
                 if (!string.IsNullOrWhiteSpace(filtro))
                 {
-                    var f = filtro.Trim();
+                    // --- CORREÇÃO AQUI ---
+                    var f = filtro.Trim().ToLower(); // 1. Filtro para minúsculas
+
+                    // 2. Usar .ToLower().Contains() (que vira SQL) em vez de IndexOf com StringComparison
                     query = query.Where(u =>
-                        (!string.IsNullOrEmpty(u.NomeUsuario) && u.NomeUsuario.IndexOf(f, StringComparison.OrdinalIgnoreCase) >= 0) ||
-                        (!string.IsNullOrEmpty(u.NomeCompleto) && u.NomeCompleto.IndexOf(f, StringComparison.OrdinalIgnoreCase) >= 0)
+                        (u.NomeUsuario != null && u.NomeUsuario.ToLower().Contains(f)) ||
+                        (u.NomeCompleto != null && u.NomeCompleto.ToLower().Contains(f))
                     );
+                    // ---------------------
                 }
                 var ordenados = query.OrderBy(u => u.NomeUsuario).ToList();
                 return new Usuarios(ordenados);
             }
         }
 
-        // ... (Métodos ListarFormatado, ListarItems, CarregarLista, ObterIdSelecionado permanecem iguais) ...
+        // ... (ListarFormatado, ListarItems, CarregarLista, ObterIdSelecionado - permanecem iguais) ...
 
         public List<string> ListarFormatado(string filtro = null)
         {
@@ -96,6 +100,8 @@ namespace CassinoMVC.Controllers
             }
         }
 
+        // ... (Remover, Criar, Atualizar, RemoverSelecionado - permanecem iguais) ...
+
         public bool Remover(int idUsuarioSelecionado, int idUsuarioLogado, out string mensagem)
         {
             if (idUsuarioLogado <= idUsuarioSelecionado)
@@ -143,7 +149,6 @@ namespace CassinoMVC.Controllers
                 }
             }
 
-            // MODIFICADO: Chamando o método da *instância*
             usuarioCriado = _usuarioService.CriarUsuario(nomeCompleto.Trim(), nomeUsuario.Trim(), senha, cargo);
 
             if (cargo == CargoUsuario.Jogador)
@@ -194,7 +199,6 @@ namespace CassinoMVC.Controllers
                 u.NomeUsuario = (nomeUsuario ?? string.Empty).Trim();
                 if (!string.IsNullOrEmpty(novaSenhaOuVazia))
                 {
-                    // MODIFICADO: Chamando o método da *instância*
                     u.SenhaHash = _usuarioService.GerarHashSenha(novaSenhaOuVazia);
                 }
                 if (u.Cargo != novoCargo)
@@ -224,7 +228,6 @@ namespace CassinoMVC.Controllers
             }
         }
 
-        // ... (Método RemoverSelecionado permanece igual) ...
         public void RemoverSelecionado(IWin32Window owner, ListBox listBox, Usuario usuarioLogado)
         {
             if (usuarioLogado == null)
